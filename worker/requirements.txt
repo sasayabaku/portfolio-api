@@ -1,0 +1,5 @@
+icecream>=2.1.0
+google-cloud-datastore>=2.1.0
+google-api-python-client
+tqdm>=4.43.0
+Flask>=1.1.0

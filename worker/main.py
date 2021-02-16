@@ -1,9 +1,10 @@
+from flask import Flask, jsonify
+
 import requests
 import datetime
 from tqdm import tqdm
 from google.cloud import datastore
 import os
-from icecream import ic
 
 
 class QiitaWorker(object):
@@ -12,8 +13,10 @@ class QiitaWorker(object):
 
         self.access_token = os.environ.get('QIITA_TOKEN')
 
+        _username = 'sasayabaku'
+
         self.base_url = "https://qiita.com/api/v2/"
-        self.items_url = self.base_url + "users/sasayabaku/items?per_page=100"
+        self.items_url = self.base_url + "users/" + _username + "/items?per_page=100"
         self.item_url = self.base_url + "items/"
 
         self.headers = {
@@ -51,13 +54,16 @@ class QiitaWorker(object):
             self.total['views'] += item_new_document['views']
             self.total['stocks'] += item_new_document['stocks']
 
+        from icecream import ic
+        ic(self.total)
+
     def update_datastore(self):
         kind = "Aggregate"
         task_key = self.datastore_client.key(kind)
 
         task = datastore.Entity(key=task_key)
 
-        task['date'] = datetime.datetime.now()
+        task['date'] = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
 
         task['likes'] = self.total['likes']
         task['views'] = self.total['views']
@@ -66,6 +72,21 @@ class QiitaWorker(object):
         self.datastore_client.put(task)
 
     def _get_item_stock(self, item):
-        _url = self.items_url + str(item) + "/stockers"
+        _url = self.item_url + str(item) + "/stockers"
         stock_json = requests.get(_url, headers=self.headers).json()
         return stock_json
+
+
+app = Flask(__name__)
+
+@app.route('/')
+def worker():
+    worker = QiitaWorker()
+    worker.collect()
+    worker.update_datastore()
+
+    return jsonify({'message': 'work success'}), 200
+
+
+if __name__ == "__main__":
+    app.run(host='127.0.0.1', port=8080, debug=True)
