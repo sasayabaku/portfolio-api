@@ -13,8 +13,10 @@ class QiitaWorker(object):
 
         self.access_token = os.environ.get('QIITA_TOKEN')
 
+        _username = 'sasayabaku'
+
         self.base_url = "https://qiita.com/api/v2/"
-        self.items_url = self.base_url + "users/sasayabaku/items?per_page=100"
+        self.items_url = self.base_url + "users/" + _username + "/items?per_page=100"
         self.item_url = self.base_url + "items/"
 
         self.headers = {
