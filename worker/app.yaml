@@ -1,0 +1,5 @@
+runtime: python38
+instance_class: F1
+
+env_variables:
+  QIITA_TOKEN:

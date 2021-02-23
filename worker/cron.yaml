@@ -1,0 +1,4 @@
+cron:
+  - description: "daily qiita summary log"
+    url: ""
+    schedule: every day 01:00
