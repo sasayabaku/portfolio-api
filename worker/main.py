@@ -1,5 +1,5 @@
 from flask import Flask, jsonify
-
+from flask_cors import CORS
 import requests
 import datetime
 from tqdm import tqdm
@@ -54,9 +54,6 @@ class QiitaWorker(object):
             self.total['views'] += item_new_document['views']
             self.total['stocks'] += item_new_document['stocks']
 
-        from icecream import ic
-        ic(self.total)
-
     def update_datastore(self):
         kind = "Aggregate"
         task_key = self.datastore_client.key(kind)
@@ -78,6 +75,7 @@ class QiitaWorker(object):
 
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route('/')
 def worker():
@@ -86,6 +84,35 @@ def worker():
     worker.update_datastore()
 
     return jsonify({'message': 'work success'}), 200
+
+@app.route('/hello')
+def hello():
+    return jsonify({'message': "Hello new world"})
+
+@app.route('/get_work')
+def get_work():
+
+    datastore_client = datastore.Client()
+
+    query = datastore_client.query(kind="Aggregate")
+    datastore_response = query.fetch()
+    data_list = list(datastore_response)
+
+    data = list([])
+
+    for item in data_list:
+        _json = {
+            "date": item['date'].isoformat(),
+            "likes": int(item['likes']),
+            "stocks": int(item['stocks']),
+            "views": int(item['views'])
+        }
+
+        data.append(_json)
+
+    data = sorted(data, key=lambda x: x['date'])
+
+    return jsonify({"data": data}), 200
 
 
 if __name__ == "__main__":
